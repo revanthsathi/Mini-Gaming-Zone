@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sudoku Game</title>
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background: linear-gradient(135deg, #008080, #20B2AA, #40E0D0, #008B8B);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+    color: #333;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+h1 {
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+    text-align: center;
+}
+
+#difficultyContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+button {
+    padding: 12px 25px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #008B8B;
+    color: white;
+    transition: 0.3s;
+    width: 150px;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: #005F5F;
+}
+
+#sudokuGrid {
+    display: grid;
+    grid-template-columns: repeat(9, 50px);
+    grid-template-rows: repeat(9, 50px);
+    margin-top: 20px;
+    border: 4px solid #000;
+    display: none;
+}
+
+.cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #666;
+    background: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+}
+
+.cell.prefilled {
+    background: #ccc;
+    cursor: default;
+}
+
+.cell.selected {
+    background: #FFD700;
+}
+
+.cell.wrong {
+    color: red;
+}
+
+.cell[data-row="2"], .cell[data-row="5"] { border-bottom: 3px solid black; }
+.cell[data-col="2"], .cell[data-col="5"] { border-right: 3px solid black; }
+
+#controls, #livesDisplay, #message {
+    display: none;
+    margin-top: 15px;
+    text-align: center;
+}
+
+#livesDisplay {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#message {
+    font-size: 36px;
+    font-weight: bold;
+    color: red;
+    margin-top: 20px;
+}
+</style>
+</head>
+<body>
+
+<h1>Sudoku Game</h1>
+
+<div id="difficultyContainer">
+    <button onclick="startGame('easy')">Easy</button>
+    <button onclick="startGame('medium')">Medium</button>
+    <button onclick="startGame('hard')">Hard</button>
+</div>
+
+<div id="controls">
+    <button onclick="useHint()">Hint 💡</button>
+    <button onclick="eraseCell()">Erase 🧹</button>
+    <button onclick="resetBoard()">Restart 🔄</button>
+</div>
+
+<div id="livesDisplay">Lives: ❤️❤️❤️</div>
+<div id="message"></div>
+<div id="sudokuGrid"></div>
+
+<script>
+const sudokuGrid = document.getElementById('sudokuGrid');
+const controls = document.getElementById('controls');
+const difficultyContainer = document.getElementById('difficultyContainer');
+const livesDisplay = document.getElementById('livesDisplay');
+const messageDiv = document.getElementById('message');
+
+let board = [];
+let solution = [];
+let selectedCell = null;
+let difficulty = '';
+let hintCount = 0;
+let maxHints = 0;
+let lives = 3;
+let gameOver = false;
+
+function generateEmptyBoard() {
+    sudokuGrid.innerHTML = '';
+    board = [];
+    for(let i=0;i<9;i++){
+        board.push([]);
+        for(let j=0;j<9;j++){
+            board[i].push(0);
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            cell.addEventListener('click', () => selectCell(i,j));
+            sudokuGrid.appendChild(cell);
+        }
+    }
+}
+
+function selectCell(row, col) {
+    if(gameOver) return;
+    if(selectedCell) selectedCell.classList.remove('selected');
+    const cell = sudokuGrid.children[row*9 + col];
+    if(cell.classList.contains('prefilled')) return;
+    selectedCell = cell;
+    cell.classList.add('selected');
+}
+
+document.addEventListener('keydown', e=>{
+    if(!selectedCell || gameOver) return;
+    const val = parseInt(e.key);
+    if(val >=1 && val <=9){
+        const row = parseInt(selectedCell.dataset.row);
+        const col = parseInt(selectedCell.dataset.col);
+        if(solution[row][col] === val){
+            selectedCell.innerText = val;
+            selectedCell.classList.remove('wrong');
+            board[row][col] = val;
+            checkSolution();
+        } else {
+            selectedCell.innerText = val;
+            selectedCell.classList.add('wrong');
+            lives--;
+            updateLives();
+            if(lives <= 0){
+                endGame();
+            }
+        }
+    }
+});
+
+function startGame(diff){
+    difficulty = diff;
+    hintCount = 0;
+    maxHints = diff === 'easy' ? 1 : diff === 'medium' ? 3 : 5;
+    lives = 3;
+    gameOver = false;
+    messageDiv.innerText = '';
+    messageDiv.style.display = "none";
+
+    difficultyContainer.style.display = "none";
+    controls.style.display = "block";
+    sudokuGrid.style.display = "grid";
+    livesDisplay.style.display = "block";
+
+    generateEmptyBoard();
+    generatePuzzle(diff);
+    updateLives();
+}
+
+function resetBoard(){
+    startGame(difficulty);
+}
+
+function eraseCell(){
+    if(!selectedCell || gameOver) return;
+    const row = parseInt(selectedCell.dataset.row);
+    const col = parseInt(selectedCell.dataset.col);
+    selectedCell.innerText = '';
+    selectedCell.classList.remove('wrong');
+    board[row][col] = 0;
+}
+
+function updateLives(){
+    livesDisplay.innerText = 'Lives: ' + '❤️'.repeat(lives);
+}
+
+function useHint(){
+    if(gameOver) return;
+    if(hintCount >= maxHints) {
+        alert("No hints left!");
+        return;
+    }
+    let emptyCells = [];
+    for(let i=0;i<9;i++){
+        for(let j=0;j<9;j++){
+            if(board[i][j]===0) emptyCells.push({row:i,col:j});
+        }
+    }
+    if(emptyCells.length === 0) return;
+    const randCell = emptyCells[Math.floor(Math.random()*emptyCells.length)];
+    const cellDiv = sudokuGrid.children[randCell.row*9 + randCell.col];
+    board[randCell.row][randCell.col] = solution[randCell.row][randCell.col];
+    cellDiv.innerText = solution[randCell.row][randCell.col];
+    cellDiv.classList.remove('wrong');
+    hintCount++;
+}
+
+function endGame(){
+    gameOver = true;
+    sudokuGrid.style.display = "none";
+    messageDiv.style.display = "block";
+    messageDiv.innerText = "💀 Game Over! You lost all lives.";
+    controls.style.display = "block";
+}
+
+function solveSudoku(b){
+    for(let row=0;row<9;row++){
+        for(let col=0;col<9;col++){
+            if(b[row][col]===0){
+                for(let num=1;num<=9;num++){
+                    if(isValid(b,row,col,num)){
+                        b[row][col] = num;
+                        if(solveSudoku(b)) return true;
+                        b[row][col] = 0;
+                    }
+                }
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function isValid(b,row,col,num){
+    for(let i=0;i<9;i++){
+        if(b[row][i]===num || b[i][col]===num) return false;
+    }
+    const startRow = Math.floor(row/3)*3;
+    const startCol = Math.floor(col/3)*3;
+    for(let i=0;i<3;i++){
+        for(let j=0;j<3;j++){
+            if(b[startRow+i][startCol+j]===num) return false;
+        }
+    }
+    return true;
+}
+
+function generatePuzzle(diff){
+    let tempBoard = Array.from({length:9},()=>Array(9).fill(0));
+    for(let k=0;k<9;k+=3){
+        fillBlock(tempBoard,k,k);
+    }
+    solveSudoku(tempBoard);
+    solution = JSON.parse(JSON.stringify(tempBoard));
+
+    let cellsToRemove = diff==='easy'?40: diff==='medium'?50:60;
+    while(cellsToRemove>0){
+        let i=Math.floor(Math.random()*9);
+        let j=Math.floor(Math.random()*9);
+        if(tempBoard[i][j]!==0){
+            tempBoard[i][j]=0;
+            cellsToRemove--;
+        }
+    }
+
+    for(let i=0;i<9;i++){
+        for(let j=0;j<9;j++){
+            const cellDiv = sudokuGrid.children[i*9 + j];
+            board[i][j] = tempBoard[i][j];
+            cellDiv.innerText = tempBoard[i][j]!==0 ? tempBoard[i][j] : '';
+            if(tempBoard[i][j]!==0) cellDiv.classList.add('prefilled');
+            else cellDiv.classList.remove('prefilled');
+        }
+    }
+}
+
+function fillBlock(b,rowStart,colStart){
+    let nums = [1,2,3,4,5,6,7,8,9];
+    for(let i=0;i<3;i++){
+        for(let j=0;j<3;j++){
+            const idx = Math.floor(Math.random()*nums.length);
+            b[rowStart+i][colStart+j] = nums.splice(idx,1)[0];
+        }
+    }
+}
+
+function checkSolution(){
+    for(let i=0;i<9;i++){
+        for(let j=0;j<9;j++){
+            if(board[i][j]!==solution[i][j]) return false;
+        }
+    }
+    if(board.flat().every(n=>n!==0)){
+        messageDiv.style.display = "block";
+        messageDiv.innerText = "🎉 Congratulations! You solved the puzzle!";
+        gameOver = true;
+        sudokuGrid.style.display = "none";
+    }
+}
+
+generateEmptyBoard();
+</script>
+</body>
+</html>
