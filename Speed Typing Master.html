@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Speed Typing Master</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #2193b0, #6dd5ed);
+      background-size: 400% 400%;
+      animation: gradientBG 10s ease infinite;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #fff;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 15px;
+      width: 500px;
+      max-width: 90%;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 5px #000;
+    }
+
+    #difficultyArea button {
+      padding: 12px 20px;
+      margin: 8px;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+
+    #difficultyArea button:hover {
+      transform: scale(1.1);
+    }
+
+    button.easy { background: #4caf50; color: white; }
+    button.medium { background: #ff9800; color: white; }
+    button.hard { background: #f44336; color: white; }
+
+    #gameArea {
+      display: none;
+    }
+
+    #word {
+      font-size: 24px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+
+    input {
+      padding: 12px;
+      width: 90%;
+      border: none;
+      border-radius: 6px;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .hearts {
+      color: red;
+      font-size: 22px;
+    }
+
+    #result {
+      display: none;
+      font-size: 22px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚡ Speed Typing Master ⚡</h1>
+
+    <div id="difficultyArea">
+      <p>Select Difficulty:</p>
+      <button class="easy" onclick="setDifficulty('easy')">🐣 Easy</button>
+      <button class="medium" onclick="setDifficulty('medium')">⚡ Medium</button>
+      <button class="hard" onclick="setDifficulty('hard')">🧠 Hard</button>
+    </div>
+
+    <div id="gameArea">
+      <div id="word"></div>
+      <input type="text" id="input" placeholder="Type here..." oninput="checkInput()">
+      <div class="stats">
+        <div>⏳ Time: <span id="time">30</span>s</div>
+        <div>⭐ Score: <span id="score">0</span></div>
+        <div class="hearts" id="lives">❤️❤️❤️</div>
+      </div>
+      <div style="margin-top: 10px;">🏆 High Score: <span id="highScore">0</span></div>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const easyWords = [
+      "cat","dog","sun","moon","fish","book","star","tree","car","ball",
+      "love","smile","apple","cake","milk","shoe","happy","light","rain","sky"
+    ];
+    const mediumWords = [
+      "javascript","computer","mountain","keyboard","holiday","picture frame",
+      "reading books","writing code","sunny weather","football game",
+      "green garden","fast typing","music player","mobile phone","friendly smile"
+    ];
+    const hardWords = [
+      "The quick brown fox jumps over the lazy dog",
+      "Typing games improve your speed and accuracy",
+      "Programming requires patience and practice",
+      "Artificial Intelligence changes the future",
+      "Consistency is the key to mastering any skill",
+      "Hard work beats talent when talent doesn't work hard"
+    ];
+
+    let time, score, lives, currentWord, timer, difficulty;
+    const inputEl = document.getElementById("input");
+    const wordEl = document.getElementById("word");
+    const timeEl = document.getElementById("time");
+    const scoreEl = document.getElementById("score");
+    const livesEl = document.getElementById("lives");
+    const highScoreEl = document.getElementById("highScore");
+    const startArea = document.getElementById("difficultyArea");
+    const gameArea = document.getElementById("gameArea");
+    const resultEl = document.getElementById("result");
+
+    function getHighScoreKey(level) {
+      return `typingHighScore_${level}`;
+    }
+
+    function setDifficulty(level) {
+      difficulty = level;
+      startArea.style.display = "none";
+      gameArea.style.display = "block";
+      resetGame();
+      startGame();
+    }
+
+    function resetGame() {
+      time = difficulty === "easy" ? 30 : difficulty === "medium" ? 45 : 60;
+      score = 0;
+      lives = 3;
+      timeEl.textContent = time;
+      scoreEl.textContent = score;
+      livesEl.textContent = "❤️".repeat(lives);
+      inputEl.value = "";
+      resultEl.style.display = "none";
+      highScoreEl.textContent = localStorage.getItem(getHighScoreKey(difficulty)) || 0;
+    }
+
+    function startGame() {
+      nextWord();
+      timer = setInterval(() => {
+        time--;
+        timeEl.textContent = time;
+        if (time <= 0 || lives <= 0) endGame();
+      }, 1000);
+    }
+
+    function getWordList() {
+      if (difficulty === "easy") return easyWords;
+      if (difficulty === "medium") return mediumWords;
+      return hardWords;
+    }
+
+    function nextWord() {
+      const list = getWordList();
+      currentWord = list[Math.floor(Math.random() * list.length)];
+      wordEl.textContent = currentWord;
+      inputEl.value = "";
+    }
+
+    function checkInput() {
+      const input = inputEl.value.trim();
+      if (input === currentWord) {
+        score++;
+        scoreEl.textContent = score;
+        nextWord();
+      } else if (currentWord.startsWith(input) === false && input.length > 0) {
+        loseLife();
+      }
+    }
+
+    function loseLife() {
+      lives--;
+      livesEl.textContent = "❤️".repeat(lives);
+      if (lives <= 0) endGame();
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      gameArea.style.display = "none";
+
+      let highScore = localStorage.getItem(getHighScoreKey(difficulty)) || 0;
+      let message = `Your Score: ${score}<br>High Score: ${highScore}`;
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem(getHighScoreKey(difficulty), highScore);
+        message = `Your Score: ${score}<br>High Score: ${highScore}<br>🎉 Yahoo! New high score! 🎉`;
+      }
+
+      resultEl.innerHTML = message + "<br><br><button onclick='location.reload()'>Restart 🔄</button>";
+      resultEl.style.display = "block";
+    }
+  </script>
+</body>
+</html>

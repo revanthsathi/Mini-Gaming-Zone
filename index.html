@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>🎮 Mini Game Zone</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a6c1ee);
+      background-size: 600% 600%;
+      animation: gradientBG 15s ease infinite;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: #fff;
+      text-align: center;
+    }
+
+    @keyframes gradientBG {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-top: 30px;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 30px;
+      padding: 40px;
+      width: 90%;
+      max-width: 1200px;
+    }
+
+    .game-tile {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s, background 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .game-tile:hover {
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .game-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    .game-name {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .controls {
+      margin: 20px;
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .controls button {
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background: #ff4b5c;
+      color: white;
+      box-shadow: 0 0 10px #ff4b5c;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    .controls button:hover {
+      transform: scale(1.1);
+      background: #c43d4a;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🎮 Welcome to Mini Game Zone</h1>
+
+  <div class="grid">
+    <a href="Tic Tac Toe.html" class="game-tile">
+      <div class="game-icon">❌⭕</div>
+      <div class="game-name">Tic Tac Toe</div>
+    </a>
+    <a href="Rock Paper Scissors.html" class="game-tile">
+      <div class="game-icon">✊✋✌️</div>
+      <div class="game-name">Rock Paper Scissors</div>
+    </a>
+    <a href="2048 game.html" class="game-tile">
+      <div class="game-icon">🔢</div>
+      <div class="game-name">2048</div>
+    </a>
+    <a href="Click Speed Game.html" class="game-tile">
+      <div class="game-icon">🖱️</div>
+      <div class="game-name">Click Speed</div>
+    </a>
+    <a href="Math Challenge.html" class="game-tile">
+      <div class="game-icon">➕➖✖️➗</div>
+      <div class="game-name">Math Challenge</div>
+    </a>
+    <a href="Memory Card Flip Game.html" class="game-tile">
+      <div class="game-icon">🃏</div>
+      <div class="game-name">Memory Flip</div>
+    </a>
+    <a href="Snake Game.html" class="game-tile">
+      <div class="game-icon">🐍</div>
+      <div class="game-name">Snake Game</div>
+    </a>
+    <a href="Speed Typing Master.html" class="game-tile">
+      <div class="game-icon">⌨️</div>
+      <div class="game-name">Typing Master</div>
+    </a>
+    <a href="Sudoku.html" class="game-tile">
+      <div class="game-icon">🔲</div>
+      <div class="game-name">Sudoku</div>
+    </a>
+    <a href="Word Pop.html" class="game-tile">
+      <div class="game-icon">💬</div>
+      <div class="game-name">Word Pop</div>
+    </a>
+  </div>
+
+  <div class="controls">
+    <button onclick="location.reload()">🔄 Restart</button>
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})">🔙 Back to Top</button>
+  </div>
+</body>
+
+</html>
